@@ -12,11 +12,15 @@
 // ============================================================================
 package org.talend.components.azurestorage.table;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 
+import com.microsoft.azure.storage.OperationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.azurestorage.AzureConnection;
@@ -32,6 +36,7 @@ import com.microsoft.azure.storage.table.TableOperation;
 import com.microsoft.azure.storage.table.TableQuery;
 import com.microsoft.azure.storage.table.TableResult;
 import com.microsoft.azure.storage.table.TableServiceException;
+import org.talend.components.azurestorage.utils.AzureStorageUtils;
 
 public class AzureStorageTableService {
 
@@ -46,7 +51,7 @@ public class AzureStorageTableService {
 
     public Iterable<String> listTables() throws InvalidKeyException, URISyntaxException {
         CloudTableClient cloudTableClient = connection.getCloudStorageAccount().createCloudTableClient();
-        return cloudTableClient.listTables();
+        return cloudTableClient.listTables(null, null, AzureStorageUtils.getTalendOperationContext());
     }
 
     public Iterable<DynamicTableEntity> executeQuery(String tableName, TableQuery<DynamicTableEntity> partitionQuery)
@@ -88,14 +93,14 @@ public class AzureStorageTableService {
             throws InvalidKeyException, URISyntaxException, StorageException {
 
         CloudTable cloudTable = connection.getCloudStorageAccount().createCloudTableClient().getTableReference(tableName);
-        return cloudTable.execute(ope);
+        return cloudTable.execute(ope, null, AzureStorageUtils.getTalendOperationContext());
     }
 
     public ArrayList<TableResult> executeOperation(String tableName, TableBatchOperation batchOpe)
             throws InvalidKeyException, URISyntaxException, StorageException {
 
         CloudTable cloudTable = connection.getCloudStorageAccount().createCloudTableClient().getTableReference(tableName);
-        return cloudTable.execute(batchOpe);
+        return cloudTable.execute(batchOpe, null, AzureStorageUtils.getTalendOperationContext());
     }
 
     /**
@@ -113,7 +118,7 @@ public class AzureStorageTableService {
      */
     private void createTableAfterDeletion(CloudTable cloudTable) throws StorageException, IOException {
         try {
-            cloudTable.create();
+            cloudTable.create(null, AzureStorageUtils.getTalendOperationContext());
         } catch (TableServiceException e) {
             if (!e.getErrorCode().equals(StorageErrorCodeStrings.TABLE_BEING_DELETED)) {
                 throw e;
@@ -126,7 +131,7 @@ public class AzureStorageTableService {
             } catch (InterruptedException eint) {
                 throw new IOException("Wait process for recreating table interrupted.");
             }
-            cloudTable.create();
+            cloudTable.create(null, AzureStorageUtils.getTalendOperationContext());
             LOGGER.debug("Table {} created.", cloudTable.getName());
         }
     }
