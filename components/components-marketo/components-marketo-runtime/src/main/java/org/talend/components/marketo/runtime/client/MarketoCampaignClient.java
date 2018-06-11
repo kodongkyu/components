@@ -27,8 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.MarketoConstants;
 import org.talend.components.marketo.runtime.client.rest.response.SyncResult;
-import org.talend.components.marketo.runtime.client.rest.type.SyncStatus;
-import org.talend.components.marketo.runtime.client.type.MarketoError;
 import org.talend.components.marketo.runtime.client.type.MarketoException;
 import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.runtime.client.type.MarketoSyncResult;
@@ -99,18 +97,7 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
             current_uri.append(fmtParams(FIELD_NEXT_PAGE_TOKEN, offset));
         }
         LOG.debug("getCampaigns : {}.", current_uri);
-        MarketoRecordResult mkto = new MarketoRecordResult();
-        LOG.debug("[getCampaigns] {}", mkto);
-        mkto.setRemainCount(0);
-        try {
-            mkto = executeGetRequest(parameters.schemaInput.schema.getValue());
-        } catch (MarketoException e) {
-            LOG.error("{}.", e);
-            mkto.setSuccess(false);
-            mkto.setRecordCount(0);
-            mkto.setErrors(Arrays.asList(new MarketoError(REST, e.getMessage())));
-        }
-        return mkto;
+        return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
     }
 
     /**
@@ -128,25 +115,14 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
                 .append(API_PATH_JSON_EXT)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
         LOG.debug("getCampaignById : {}.", current_uri);
-        MarketoRecordResult mkto = new MarketoRecordResult();
-        LOG.debug("[getCampaignById] {}", mkto);
-        mkto.setRemainCount(0);
-        try {
-            mkto = executeGetRequest(parameters.schemaInput.schema.getValue());
-        } catch (MarketoException e) {
-            LOG.error("{}.", e);
-            mkto.setSuccess(false);
-            mkto.setRecordCount(0);
-            mkto.setErrors(Arrays.asList(new MarketoError(REST, e.getMessage())));
-        }
-        return mkto;
+        return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
     }
 
     /**
      * ScheduleCampaignRequest
      *
-     * Remotely schedules a batch campaign to run at a given time. My tokens local to the campaign's parent program call be
-     * overridden for the run to customize content.
+     * Remotely schedules a batch campaign to run at a given time. My tokens local to the campaign's parent program call
+     * be overridden for the run to customize content.
      *
      */
     public MarketoRecordResult scheduleCampaign(TMarketoCampaignProperties parameters) {
@@ -171,8 +147,8 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
         current_uri = new StringBuilder(basicPath)//
                 .append(String.format(API_PATH_CAMPAIGNS_SCHEDULE, campaignId))//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));//
+        LOG.debug("scheduleCampaign {}{}.", current_uri, jsonObj);
         try {
-            LOG.debug("scheduleCampaign {}{}.", current_uri, jsonObj);
             SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, jsonObj);
             LOG.debug("[scheduleCampaign] {}", rs);
             //
@@ -199,9 +175,9 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
     /**
      * triggerCampaign (aka requestCampaign)
      *
-     * Passes a set of leads to a trigger campaign to run through the campaign's flow. The designated campaign must have a
-     * Campaign is Requested: Web Service API trigger, and must be active. My tokens local to the campaign's parent program
-     * can be overridden for the run to customize content
+     * Passes a set of leads to a trigger campaign to run through the campaign's flow. The designated campaign must have
+     * a Campaign is Requested: Web Service API trigger, and must be active. My tokens local to the campaign's parent
+     * program can be overridden for the run to customize content
      */
     public MarketoSyncResult triggerCampaign(TMarketoCampaignProperties parameters, List<IndexedRecord> records) {
         String campaignId = parameters.campaignId.getStringValue();
@@ -223,27 +199,8 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
         current_uri = new StringBuilder(basicPath)//
                 .append(String.format(API_PATH_CAMPAIGNS_TRIGGER, campaignId))//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));//
-        try {
-            LOG.debug("triggerCampaign {}{}.", current_uri, jsonObj);
-            SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, jsonObj);
-            LOG.debug("[triggerCampaign] {}", rs);
-            //
-            mkto.setRequestId(REST + "::" + rs.getRequestId());
-            mkto.setStreamPosition(rs.getNextPageToken());
-            mkto.setSuccess(rs.isSuccess());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(rs.getResult().size());
-                mkto.setRemainCount(0);
-                mkto.setRecords(Collections.singletonList(new SyncStatus(rs.getResult().get(0).getId(), "triggered")));
-            } else {
-                mkto.setRecordCount(0);
-                mkto.setErrors(rs.getErrors());
-            }
-        } catch (MarketoException e) {
-            mkto.setSuccess(false);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+        LOG.debug("scheduleCampaign {}{}.", current_uri, jsonObj);
+        return getSyncResultFromRequest(true, jsonObj);
     }
 
 }

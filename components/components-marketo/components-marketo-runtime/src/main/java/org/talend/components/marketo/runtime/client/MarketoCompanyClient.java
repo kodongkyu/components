@@ -23,10 +23,6 @@ import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.MarketoConstants;
-import org.talend.components.marketo.runtime.client.rest.response.CustomObjectResult;
-import org.talend.components.marketo.runtime.client.rest.response.DescribeFieldsResult;
-import org.talend.components.marketo.runtime.client.rest.response.SyncResult;
-import org.talend.components.marketo.runtime.client.type.MarketoError;
 import org.talend.components.marketo.runtime.client.type.MarketoException;
 import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.runtime.client.type.MarketoSyncResult;
@@ -39,15 +35,15 @@ import com.google.gson.JsonObject;
 
 public class MarketoCompanyClient extends MarketoCampaignClient {
 
-    public static final String API_PATH_COMPANIES = "/v1/companies";
+    private static final String API_PATH_COMPANIES = "/v1/companies";
 
-    public static final String API_PATH_COMPANIES_DESCRIBE = API_PATH_COMPANIES + API_PATH_URI_DESCRIBE;
+    private static final String API_PATH_COMPANIES_DESCRIBE = API_PATH_COMPANIES + API_PATH_URI_DESCRIBE;
 
-    public static final String API_PATH_COMPANIES_GET = API_PATH_COMPANIES + API_PATH_JSON_EXT;
+    private static final String API_PATH_COMPANIES_GET = API_PATH_COMPANIES + API_PATH_JSON_EXT;
 
-    public static final String API_PATH_COMPANIES_SYNC = API_PATH_COMPANIES + API_PATH_JSON_EXT;
+    private static final String API_PATH_COMPANIES_SYNC = API_PATH_COMPANIES + API_PATH_JSON_EXT;
 
-    public static final String API_PATH_COMPANIES_DELETE = API_PATH_COMPANIES + API_PATH_URI_DELETE;
+    private static final String API_PATH_COMPANIES_DELETE = API_PATH_COMPANIES + API_PATH_URI_DELETE;
 
     private static final Logger LOG = LoggerFactory.getLogger(MarketoCompanyClient.class);
 
@@ -65,11 +61,12 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
         String filterType = parameters.customObjectFilterType.getValue();
         String filterValues = parameters.customObjectFilterValues.getValue();
         //
-        current_uri.append(fmtParams(FIELD_BATCH_SIZE, batchLimit))//
+        current_uri
+                .append(fmtParams(FIELD_BATCH_SIZE, batchLimit))//
                 .append(fmtParams("filterType", filterType))//
                 .append(fmtParams("filterValues", filterValues));
         LOG.debug("describeCompanies : {}.", current_uri);
-        getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
+        return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
     }
 
     public MarketoRecordResult getCompanies(TMarketoInputProperties parameters, String offset) {
@@ -87,7 +84,6 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
                 : parameters.batchSize.getValue();
         current_uri = new StringBuilder(basicPath)//
                 .append(API_PATH_COMPANIES_GET)//
-                .append(API_PATH_JSON_EXT)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true))//
                 .append(fmtParams("filterType", filterType))//
                 .append(fmtParams("filterValues", filterValues))//
@@ -132,28 +128,30 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
         MarketoSyncResult mkto = new MarketoSyncResult();
         current_uri = new StringBuilder(basicPath)//
                 .append(API_PATH_COMPANIES_SYNC)//
-                .append(API_PATH_JSON_EXT)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));//
-        try {
-            LOG.debug("syncCompanies {}{}.", current_uri, inputJson);
-            SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-            //
-            mkto.setRequestId(REST + "::" + rs.getRequestId());
-            mkto.setStreamPosition(rs.getNextPageToken());
-            mkto.setSuccess(rs.isSuccess());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(rs.getResult().size());
-                mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-                mkto.setRecords(rs.getResult());
-            } else {
-                mkto.setRecordCount(0);
-                mkto.setErrors(Arrays.asList(rs.getErrors().get(0)));
-            }
-        } catch (MarketoException e) {
-            mkto.setSuccess(false);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+
+        LOG.debug("syncCompanies {}{}.", current_uri, inputJson);
+        return getSyncResultFromRequest(true, inputJson);
+        // try {
+        //
+        // SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
+        // //
+        // mkto.setRequestId(REST + "::" + rs.getRequestId());
+        // mkto.setStreamPosition(rs.getNextPageToken());
+        // mkto.setSuccess(rs.isSuccess());
+        // if (mkto.isSuccess()) {
+        // mkto.setRecordCount(rs.getResult().size());
+        // mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
+        // mkto.setRecords(rs.getResult());
+        // } else {
+        // mkto.setRecordCount(0);
+        // mkto.setErrors(Arrays.asList(rs.getErrors().get(0)));
+        // }
+        // } catch (MarketoException e) {
+        // mkto.setSuccess(false);
+        // mkto.setErrors(Arrays.asList(e.toMarketoError()));
+        // }
+        // return mkto;
     }
 
     public MarketoSyncResult deleteCompany(TMarketoOutputProperties parameters, List<IndexedRecord> records) {
@@ -176,26 +174,29 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
         current_uri = new StringBuilder(basicPath)//
                 .append(API_PATH_COMPANIES_DELETE)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
-        MarketoSyncResult mkto = new MarketoSyncResult();
-        try {
-            LOG.debug("deleteCompanies {}{}.", current_uri, inputJson);
-            SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-            mkto.setRequestId(REST + "::" + rs.getRequestId());
-            mkto.setStreamPosition(rs.getNextPageToken());
-            mkto.setSuccess(rs.isSuccess());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(rs.getResult().size());
-                mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-                mkto.setRecords(rs.getResult());
-            } else {
-                mkto.setRecordCount(0);
-                mkto.setErrors(Arrays.asList(new MarketoError(REST, "Could not delete Company.")));
-            }
-        } catch (MarketoException e) {
-            mkto.setSuccess(false);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+        LOG.debug("deleteCompany {}{}.", current_uri, inputJson);
+        return getSyncResultFromRequest(true, inputJson);
+        // TODO create a wrapper for post
+        // MarketoSyncResult mkto = new MarketoSyncResult();
+        // try {
+        // LOG.debug("deleteCompanies {}{}.", current_uri, inputJson);
+        // SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
+        // mkto.setRequestId(REST + "::" + rs.getRequestId());
+        // mkto.setStreamPosition(rs.getNextPageToken());
+        // mkto.setSuccess(rs.isSuccess());
+        // if (mkto.isSuccess()) {
+        // mkto.setRecordCount(rs.getResult().size());
+        // mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
+        // mkto.setRecords(rs.getResult());
+        // } else {
+        // mkto.setRecordCount(0);
+        // mkto.setErrors(Arrays.asList(new MarketoError(REST, "Could not delete Company.")));
+        // }
+        // } catch (MarketoException e) {
+        // mkto.setSuccess(false);
+        // mkto.setErrors(Arrays.asList(e.toMarketoError()));
+        // }
+        // return mkto;
     }
 
 }

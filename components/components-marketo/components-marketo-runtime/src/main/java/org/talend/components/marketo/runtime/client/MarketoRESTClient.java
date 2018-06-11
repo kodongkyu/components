@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.runtime.client.type.MarketoException;
 import org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties;
 
-public class MarketoRESTClient extends MarketoBulkExecClient implements MarketoClientServiceExtended {
+public class MarketoRESTClient extends MarketoOpportunityClient implements MarketoClientServiceExtended {
 
     private static final Logger LOG = LoggerFactory.getLogger(MarketoRESTClient.class);
 

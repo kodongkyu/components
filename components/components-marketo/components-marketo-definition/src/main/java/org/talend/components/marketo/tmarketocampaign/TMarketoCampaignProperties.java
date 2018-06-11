@@ -122,7 +122,6 @@ public class TMarketoCampaignProperties extends MarketoComponentWizardBaseProper
 
         if (form.getName().equals(Form.MAIN)) {
             // first hide everything
-            form.getWidget(apiMode.getName()).setVisible(false); // REST ONLY
             form.getWidget(campaignId.getName()).setVisible(false);
             form.getWidget(campaignIds.getName()).setVisible(false);
             form.getWidget(campaignNames.getName()).setVisible(false);

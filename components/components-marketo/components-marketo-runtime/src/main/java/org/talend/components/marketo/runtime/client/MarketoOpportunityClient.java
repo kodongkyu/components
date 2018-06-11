@@ -23,7 +23,6 @@ import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.MarketoConstants;
-import org.talend.components.marketo.runtime.client.rest.response.CustomObjectResult;
 import org.talend.components.marketo.runtime.client.rest.response.SyncResult;
 import org.talend.components.marketo.runtime.client.type.MarketoError;
 import org.talend.components.marketo.runtime.client.type.MarketoException;
@@ -31,9 +30,9 @@ import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.runtime.client.type.MarketoSyncResult;
 import org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties;
-import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.InputOperation;
 import org.talend.components.marketo.tmarketooutput.TMarketoOutputProperties;
-import org.talend.components.marketo.tmarketooutput.TMarketoOutputProperties.OutputOperation;
+import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.InputOperation;
+import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -67,32 +66,15 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
         if (parameters.inputOperation.getValue().equals(InputOperation.OpportunityRole)) {
             resource = API_PATH_OPPORTUNITY_ROLE;
         }
+        String customObjectName = parameters.customObjectName.getValue();
         current_uri = new StringBuilder(basicPath)//
                 .append(resource)//
+                .append(customObjectName)//
                 .append(API_PATH_URI_DESCRIBE)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
         LOG.debug("describeOpportunity : {}.", current_uri);
-        MarketoRecordResult mkto = new MarketoRecordResult();
-        mkto.setRemainCount(0);
-        try {
-            CustomObjectResult result = (CustomObjectResult) executeGetRequest(CustomObjectResult.class);
-            mkto.setSuccess(result.isSuccess());
-            mkto.setRequestId(REST + "::" + result.getRequestId());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(1);
-                mkto.setRecords(result.getRecords());
-            } else {
-                if (result.getErrors() != null) {
-                    mkto.setErrors(result.getErrors());
-                }
-            }
-        } catch (MarketoException e) {
-            LOG.error("{}.", e);
-            mkto.setSuccess(false);
-            mkto.setRecordCount(0);
-            mkto.setErrors(Arrays.asList(new MarketoError(REST, e.getMessage())));
-        }
-        return mkto;
+
+        return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
     }
 
     /**
@@ -146,7 +128,8 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
                 mkto = executeFakeGetRequest(parameters.schemaInput.schema.getValue(), input.toString());
 
             } else {
-                current_uri.append(fmtParams("filterType", filterType))//
+                current_uri
+                        .append(fmtParams("filterType", filterType))//
                         .append(fmtParams("filterValues", filterValues));//
                 if (!fields.isEmpty()) {
                     current_uri.append(fmtParams(FIELD_FIELDS, csvString(fields.toArray())));

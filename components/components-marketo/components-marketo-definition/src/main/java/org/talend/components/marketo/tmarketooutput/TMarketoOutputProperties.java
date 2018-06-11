@@ -12,8 +12,10 @@
 // ============================================================================
 package org.talend.components.marketo.tmarketooutput;
 
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteCompanies;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteCustomObjects;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteLeads;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncCompanies;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncCustomObjects;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncLead;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncMultipleLeads;
@@ -88,7 +90,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
     public Property<String> customLookupField = newString("customLookupField");
 
     /*
-     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to create
+     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to
+     * create
      * another lead which contains the same email address.
      */
     public Property<Boolean> deDupeEnabled = newBoolean("deDupeEnabled");
@@ -107,14 +110,15 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
 
     public Property<String> customObjectDedupeBy = newString("customObjectDedupeBy");
 
-    public Property<CustomObjectDeleteBy> customObjectDeleteBy = newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
+    public Property<CustomObjectDeleteBy> customObjectDeleteBy =
+            newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
 
     public Property<Boolean> deleteLeadsInBatch = newBoolean("deleteLeadsInBatch");
 
     private static final Logger LOG = LoggerFactory.getLogger(TMarketoOutputProperties.class);
 
-    private static final I18nMessages messages = GlobalI18N.getI18nMessageProvider()
-            .getI18nMessages(TMarketoOutputProperties.class);
+    private static final I18nMessages messages =
+            GlobalI18N.getI18nMessageProvider().getI18nMessages(TMarketoOutputProperties.class);
 
     public TMarketoOutputProperties(String name) {
         super(name);
@@ -241,6 +245,13 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
                     form.getWidget(customObjectName.getName()).setVisible(true);
                     form.getWidget(customObjectDeleteBy.getName()).setVisible(true);
                     break;
+                case syncCompanies:
+                    form.getWidget(customObjectSyncAction.getName()).setVisible(true);
+                    form.getWidget(customObjectDedupeBy.getName()).setVisible(true);
+                    break;
+                case deleteCompanies:
+                    form.getWidget(customObjectDeleteBy.getName()).setVisible(true);
+                    break;
                 }
             }
         }
@@ -255,6 +266,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             case deleteLeads:
             case syncCustomObjects:
             case deleteCustomObjects:
+            case syncCompanies:
+            case deleteCompanies:
                 ValidationResultMutable vr = new ValidationResultMutable();
                 vr.setStatus(Result.ERROR);
                 vr.setMessage(messages.getMessage("validation.error.operation.soap"));
@@ -345,6 +358,10 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             case deleteCustomObjects:
                 s = MarketoConstants.getCustomObjectSyncSchema();
                 break;
+            case syncCompanies:
+            case deleteCompanies:
+                s = MarketoConstants.getCompanySyncSchema();
+                break;
             }
         }
         schemaInput.schema.setValue(s);
@@ -369,6 +386,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         // all other cases
         boolean isCustomObject = (outputOperation.getValue().equals(syncCustomObjects)
                 || outputOperation.getValue().equals(deleteCustomObjects));
+        boolean isCompany = (outputOperation.getValue().equals(syncCompanies)
+                || outputOperation.getValue().equals(deleteCompanies));
         //
         if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
             f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
@@ -376,14 +395,21 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
             flowFields.add(f);
         }
-        if (isCustomObject) {
+        if (isCustomObject || isCompany) {
             if (inputSchema.getField(MarketoConstants.FIELD_MARKETO_GUID) == null) {
                 f = new Field(MarketoConstants.FIELD_MARKETO_GUID, Schema.create(Type.STRING), null, (Object) null);
                 f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
                 f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
                 flowFields.add(f);
             }
-
+            if (isCompany) {
+                if (inputSchema.getField(MarketoConstants.FIELD_ID) == null) {
+                    f = new Field(MarketoConstants.FIELD_ID, Schema.create(Type.INT), null, (Object) null);
+                    f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
+                    f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
+                    flowFields.add(f);
+                }
+            }
             f = new Field(MarketoConstants.FIELD_SEQ, Schema.create(Type.INT), null, (Object) null);
             f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
@@ -394,7 +420,9 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             flowFields.add(f);
         }
         //
-        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
+        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null)
+
+        {
             f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
             f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
@@ -406,7 +434,9 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
             rejectFields.add(f);
         }
+
         Schema flowSchema = MarketoUtils.newSchema(inputSchema, "schemaFlow", flowFields);
+
         Schema rejectSchema = MarketoUtils.newSchema(inputSchema, "schemaReject", rejectFields);
         schemaFlow.schema.setValue(flowSchema);
         schemaReject.schema.setValue(rejectSchema);
@@ -427,8 +457,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         }
         checkForInvalidStoredProperties();
         // migrate CustomLookup
-        if (isApiREST()
-                && (syncMultipleLeads.equals(outputOperation.getValue()) || syncLead.equals(outputOperation.getValue()))) {
+        if (isApiREST() && (syncMultipleLeads.equals(outputOperation.getValue())
+                || syncLead.equals(outputOperation.getValue()))) {
             String value = getEnumStoredValue(lookupField.getStoredValue());
             boolean correctValue = false;
             for (RESTLookupFields lkt : RESTLookupFields.values()) {
@@ -460,7 +490,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
      */
     private void checkForInvalidStoredProperties() {
         outputOperation = checkForInvalidStoredEnumProperty(outputOperation, OutputOperation.class);
-        customObjectSyncAction = checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
+        customObjectSyncAction =
+                checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
     }
 
 }
