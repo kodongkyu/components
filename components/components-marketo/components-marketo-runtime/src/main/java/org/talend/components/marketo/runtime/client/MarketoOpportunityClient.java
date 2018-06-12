@@ -13,7 +13,6 @@
 package org.talend.components.marketo.runtime.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +22,6 @@ import org.apache.avro.generic.IndexedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.components.marketo.MarketoConstants;
-import org.talend.components.marketo.runtime.client.rest.response.SyncResult;
-import org.talend.components.marketo.runtime.client.type.MarketoError;
 import org.talend.components.marketo.runtime.client.type.MarketoException;
 import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.runtime.client.type.MarketoSyncResult;
@@ -69,7 +66,6 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
         String customObjectName = parameters.customObjectName.getValue();
         current_uri = new StringBuilder(basicPath)//
                 .append(resource)//
-                .append(customObjectName)//
                 .append(API_PATH_URI_DESCRIBE)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
         LOG.debug("describeOpportunity : {}.", current_uri);
@@ -104,47 +100,36 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
                 .append(resource)//
                 .append(API_PATH_JSON_EXT)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true))//
-                .append(fmtParams(FIELD_BATCH_SIZE, batchLimit));
-        if (offset != null) {
-            current_uri.append(fmtParams(FIELD_NEXT_PAGE_TOKEN, offset));
-        }
+        ;
         //
-        MarketoRecordResult mkto = new MarketoRecordResult();
-        try {
-            if (useCompoundKey) {
-                JsonObject inputJson = new JsonObject();
-                Gson gson = new Gson();
-                if (!fields.isEmpty()) {
-                    inputJson.add(FIELD_FIELDS, gson.toJsonTree(fields));
-                }
-                StringBuilder input = new StringBuilder();
-                input.append(FIELD_FILTER_TYPE + "=" + filterType);
-                input.append(fmtParams(FIELD_FILTER_VALUES, filterValues));
-                if (!fields.isEmpty()) {
-                    input.append(fmtParams(FIELD_FIELDS, csvString(fields.toArray())));
-                }
-                input.append(fmtParams(FIELD_INPUT, parameters.compoundKey.getKeyValuesAsJson()));
-                LOG.debug("getOpportunities: {} body : {}", current_uri, input);
-                mkto = executeFakeGetRequest(parameters.schemaInput.schema.getValue(), input.toString());
-
-            } else {
-                current_uri
-                        .append(fmtParams("filterType", filterType))//
-                        .append(fmtParams("filterValues", filterValues));//
-                if (!fields.isEmpty()) {
-                    current_uri.append(fmtParams(FIELD_FIELDS, csvString(fields.toArray())));
-                }
-                LOG.debug("getOpportunities : {}.", current_uri);
-                mkto = executeGetRequest(parameters.schemaInput.schema.getValue());
+        if (useCompoundKey) {
+            JsonObject inputJson = new JsonObject();
+            Gson gson = new Gson();
+            if (offset != null) {
+                inputJson.addProperty(FIELD_NEXT_PAGE_TOKEN, offset);
             }
+            inputJson.addProperty(FIELD_BATCH_SIZE, batchLimit);
 
-        } catch (MarketoException e) {
-            LOG.error("{}.", e);
-            mkto.setSuccess(false);
-            mkto.setRecordCount(0);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
+            inputJson.addProperty("filterType", "dedupeFields");
+            if (!fields.isEmpty()) {
+                inputJson.add(FIELD_FIELDS, gson.toJsonTree(fields));
+            }
+            inputJson.add(FIELD_INPUT, parameters.compoundKey.getKeyValuesAsJson().getAsJsonArray());
+            LOG.debug("getOpportunities: {} body : {}", current_uri, inputJson);
+            return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), true, inputJson.toString());
+
+        } else {
+            current_uri.append(fmtParams(FIELD_BATCH_SIZE, batchLimit)).append(fmtParams("filterType", filterType))//
+                    .append(fmtParams("filterValues", filterValues));//
+            if (offset != null) {
+                current_uri.append(fmtParams(FIELD_NEXT_PAGE_TOKEN, offset));
+            }
+            if (!fields.isEmpty()) {
+                current_uri.append(fmtParams(FIELD_FIELDS, csvString(fields.toArray())));
+            }
+            LOG.debug("getOpportunities : {}.", current_uri);
+            return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
         }
-        return mkto;
     }
 
     /**
@@ -176,39 +161,17 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
             opportunities.add(opportunity);
         }
         inputJson.add(FIELD_INPUT, gson.toJsonTree(opportunities));
-        MarketoSyncResult mkto = new MarketoSyncResult();
-
         current_uri = new StringBuilder(basicPath)//
                 .append(resource)//
                 .append(API_PATH_JSON_EXT)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));//
-
-        try {
-            LOG.debug("syncOpportunities {}{}.", current_uri, inputJson);
-            SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-            //
-            mkto.setRequestId(REST + "::" + rs.getRequestId());
-            mkto.setStreamPosition(rs.getNextPageToken());
-            mkto.setSuccess(rs.isSuccess());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(rs.getResult().size());
-                mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-                mkto.setRecords(rs.getResult());
-            } else {
-                mkto.setRecordCount(0);
-                mkto.setErrors(Arrays.asList(rs.getErrors().get(0)));
-            }
-            LOG.debug("rs = {}.", rs);
-        } catch (MarketoException e) {
-            mkto.setSuccess(false);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+        LOG.debug("syncOpportunities {}{}.", current_uri, inputJson);
+        return getSyncResultFromRequest(true, inputJson);
     }
 
     /**
-     * Deletes a list of opportunity records from the target instance. Input records should only have one member, based
-     * on the value of 'dedupeBy'.
+     * Deletes a list of opportunity records from the target instance. Input records should only have one member, based on
+     * the value of 'dedupeBy'.
      *
      * @param parameters
      * @param records
@@ -239,26 +202,8 @@ public class MarketoOpportunityClient extends MarketoCompanyClient {
                 .append(resource)//
                 .append(API_PATH_URI_DELETE)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
-        MarketoSyncResult mkto = new MarketoSyncResult();
-        try {
-            LOG.debug("deleteOpportunities {}{}.", current_uri, inputJson);
-            SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-            mkto.setRequestId(REST + "::" + rs.getRequestId());
-            mkto.setStreamPosition(rs.getNextPageToken());
-            mkto.setSuccess(rs.isSuccess());
-            if (mkto.isSuccess()) {
-                mkto.setRecordCount(rs.getResult().size());
-                mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-                mkto.setRecords(rs.getResult());
-            } else {
-                mkto.setRecordCount(0);
-                mkto.setErrors(Arrays.asList(new MarketoError(REST, "Could not delete Opportunity.")));
-            }
-        } catch (MarketoException e) {
-            mkto.setSuccess(false);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+        LOG.debug("deleteOpportunities {}{}.", current_uri, inputJson);
+        return getSyncResultFromRequest(true, inputJson);
     }
 
 }

@@ -148,8 +148,8 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
 
     private transient static final Logger LOG = LoggerFactory.getLogger(MarketoBaseRESTClient.class);
 
-    protected static final I18nMessages messages =
-            GlobalI18N.getI18nMessageProvider().getI18nMessages(MarketoBaseRESTClient.class);
+    protected static final I18nMessages messages = GlobalI18N.getI18nMessageProvider()
+            .getI18nMessages(MarketoBaseRESTClient.class);
 
     public MarketoBaseRESTClient(TMarketoConnectionProperties connection) throws MarketoException {
         endpoint = connection.endpoint.getValue();
@@ -198,8 +198,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
                     throw new MarketoException(REST, err.get("code").toString(), err.get("message").toString());
                 }
             } else {
-                throw new MarketoException(REST, responseCode,
-                        "Marketo Authentication failed! Please check your " + "setting!");
+                throw new MarketoException(REST, responseCode, "Marketo Authentication failed! Please check your " + "setting!");
             }
         } catch (ProtocolException | SocketTimeoutException | SocketException e) {
             LOG.error("AccessToken error: {}.", e.getMessage());
@@ -255,8 +254,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
             HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
             urlConn.setRequestMethod(QUERY_METHOD_POST);
             if (isForLead) {
-                urlConn.setRequestProperty(REQUEST_PROPERTY_CONTENT_TYPE,
-                        REQUEST_VALUE_APPLICATION_X_WWW_FORM_URLENCODED);
+                urlConn.setRequestProperty(REQUEST_PROPERTY_CONTENT_TYPE, REQUEST_VALUE_APPLICATION_X_WWW_FORM_URLENCODED);
             } else {
                 urlConn.setRequestProperty(REQUEST_PROPERTY_CONTENT_TYPE, REQUEST_VALUE_APPLICATION_JSON);
             }
@@ -457,8 +455,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
                 if (!mkr.isSuccess() && ltm.get(FIELD_ERRORS) != null) {
                     List<LinkedTreeMap> errors = (List<LinkedTreeMap>) ltm.get(FIELD_ERRORS);
                     for (LinkedTreeMap err : errors) {
-                        MarketoError error =
-                                new MarketoError(REST, (String) err.get("code"), (String) err.get("message"));
+                        MarketoError error = new MarketoError(REST, (String) err.get("code"), (String) err.get("message"));
                         mkr.setErrors(Arrays.asList(error));
                     }
                 }
@@ -530,16 +527,13 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
      * <li>602 Access token expired The Access Token included in the call is no longer valid due to expiration.</li>
      * <li>604 Request timed out The request was running for too long, or exceeded the time-out period specified in the
      * header of the call.</li>
-     * <li>606 Max rate limit ‘%s’ exceeded with in ‘%s’ secs The number of calls in the past 20 seconds was greater
-     * than
+     * <li>606 Max rate limit ‘%s’ exceeded with in ‘%s’ secs The number of calls in the past 20 seconds was greater than
      * 100</li>
      * <li>608 API Temporarily Unavailable</li>
      * <li>611 System error All unhandled exceptions</li>
-     * <li>614 Invalid Subscription The destination subscription cannot be found or is unreachable. This usually
-     * indicates
+     * <li>614 Invalid Subscription The destination subscription cannot be found or is unreachable. This usually indicates
      * temporary inaccessibility.</li>
-     * <li>615 Concurrent access limit reached At most 10 requests can be processed by any subscription at a time. This
-     * will
+     * <li>615 Concurrent access limit reached At most 10 requests can be processed by any subscription at a time. This will
      * be returned if there are already 10 requests for the subscription ongoing.</li>
      *
      */
@@ -575,8 +569,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
                     continue;
                 }
                 if (MarketoClientUtils.isDateTypeField(f) && value != null) {
-                    result.put(f.name(),
-                            MarketoClientUtils.formatLongToDateString(Long.valueOf(String.valueOf(value))));
+                    result.put(f.name(), MarketoClientUtils.formatLongToDateString(Long.valueOf(String.valueOf(value))));
                     continue;
                 }
                 result.put(f.name(), value);
@@ -618,7 +611,6 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
                 mkto.setRecordCount(0);
                 mkto.setErrors(rs.getErrors());
             }
-            LOG.debug("rs = {}.", rs);
         } catch (MarketoException e) {
             mkto.setSuccess(false);
             mkto.setErrors(Collections.singletonList(e.toMarketoError()));
@@ -635,8 +627,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
      * @param paramPOST
      * @return
      */
-    public MarketoRecordResult getRecordResultForFromRequestBySchema(Schema schema, boolean isFakeGetRequest,
-            String paramPOST) {
+    public MarketoRecordResult getRecordResultForFromRequestBySchema(Schema schema, boolean isFakeGetRequest, String paramPOST) {
         MarketoRecordResult mkto = new MarketoRecordResult();
         try {
             if (isFakeGetRequest) {

@@ -15,10 +15,14 @@ package org.talend.components.marketo.tmarketooutput;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteCompanies;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteCustomObjects;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteLeads;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteOpportunities;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteOpportunityRoles;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncCompanies;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncCustomObjects;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncLead;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncMultipleLeads;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncOpportunities;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncOpportunityRoles;
 import static org.talend.daikon.properties.ValidationResult.OK;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
@@ -90,8 +94,7 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
     public Property<String> customLookupField = newString("customLookupField");
 
     /*
-     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to
-     * create
+     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to create
      * another lead which contains the same email address.
      */
     public Property<Boolean> deDupeEnabled = newBoolean("deDupeEnabled");
@@ -110,15 +113,14 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
 
     public Property<String> customObjectDedupeBy = newString("customObjectDedupeBy");
 
-    public Property<CustomObjectDeleteBy> customObjectDeleteBy =
-            newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
+    public Property<CustomObjectDeleteBy> customObjectDeleteBy = newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
 
     public Property<Boolean> deleteLeadsInBatch = newBoolean("deleteLeadsInBatch");
 
     private static final Logger LOG = LoggerFactory.getLogger(TMarketoOutputProperties.class);
 
-    private static final I18nMessages messages =
-            GlobalI18N.getI18nMessageProvider().getI18nMessages(TMarketoOutputProperties.class);
+    private static final I18nMessages messages = GlobalI18N.getI18nMessageProvider()
+            .getI18nMessages(TMarketoOutputProperties.class);
 
     public TMarketoOutputProperties(String name) {
         super(name);
@@ -252,6 +254,15 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
                 case deleteCompanies:
                     form.getWidget(customObjectDeleteBy.getName()).setVisible(true);
                     break;
+                case syncOpportunities:
+                case syncOpportunityRoles:
+                    form.getWidget(customObjectSyncAction.getName()).setVisible(true);
+                    form.getWidget(customObjectDedupeBy.getName()).setVisible(true);
+                    break;
+                case deleteOpportunities:
+                case deleteOpportunityRoles:
+                    form.getWidget(customObjectDeleteBy.getName()).setVisible(true);
+                    break;
                 }
             }
         }
@@ -362,6 +373,18 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             case deleteCompanies:
                 s = MarketoConstants.getCompanySyncSchema();
                 break;
+            case syncOpportunities:
+                s = MarketoConstants.getOpportunitySyncSchema();
+                break;
+            case deleteOpportunities:
+                s = MarketoConstants.getOpportunitySyncSchema();
+                break;
+            case syncOpportunityRoles:
+                s = MarketoConstants.getOpportunityRoleSyncSchema();
+                break;
+            case deleteOpportunityRoles:
+                s = MarketoConstants.getOpportunityRoleSyncSchema();
+                break;
             }
         }
         schemaInput.schema.setValue(s);
@@ -384,18 +407,22 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         final List<Field> rejectFields = new ArrayList<Field>();
         Field f;
         // all other cases
-        boolean isCustomObject = (outputOperation.getValue().equals(syncCustomObjects)
-                || outputOperation.getValue().equals(deleteCustomObjects));
-        boolean isCompany = (outputOperation.getValue().equals(syncCompanies)
-                || outputOperation.getValue().equals(deleteCompanies));
+        boolean isCustomObject = (syncCustomObjects.equals(outputOperation.getValue())
+                || deleteCustomObjects.equals(outputOperation.getValue()));
+        boolean isCompany = (syncCompanies.equals(outputOperation.getValue())
+                || deleteCompanies.equals(outputOperation.getValue()));
+        boolean isOpportunity = (syncOpportunities.equals(outputOperation.getValue())
+                || syncOpportunityRoles.equals(outputOperation.getValue())
+                || deleteOpportunities.equals(outputOperation.getValue())
+                || deleteOpportunityRoles.equals(outputOperation.getValue()));
         //
-        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
+        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null && !isOpportunity) {
             f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
             f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
             flowFields.add(f);
         }
-        if (isCustomObject || isCompany) {
+        if (isCustomObject || isCompany || isOpportunity) {
             if (inputSchema.getField(MarketoConstants.FIELD_MARKETO_GUID) == null) {
                 f = new Field(MarketoConstants.FIELD_MARKETO_GUID, Schema.create(Type.STRING), null, (Object) null);
                 f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
@@ -420,9 +447,7 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
             flowFields.add(f);
         }
         //
-        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null)
-
-        {
+        if (inputSchema.getField(MarketoConstants.FIELD_STATUS) == null) {
             f = new Field(MarketoConstants.FIELD_STATUS, Schema.create(Type.STRING), null, (Object) null);
             f.addProp(SchemaConstants.TALEND_FIELD_GENERATED, "true");
             f.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
@@ -436,7 +461,6 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         }
 
         Schema flowSchema = MarketoUtils.newSchema(inputSchema, "schemaFlow", flowFields);
-
         Schema rejectSchema = MarketoUtils.newSchema(inputSchema, "schemaReject", rejectFields);
         schemaFlow.schema.setValue(flowSchema);
         schemaReject.schema.setValue(rejectSchema);
@@ -457,8 +481,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         }
         checkForInvalidStoredProperties();
         // migrate CustomLookup
-        if (isApiREST() && (syncMultipleLeads.equals(outputOperation.getValue())
-                || syncLead.equals(outputOperation.getValue()))) {
+        if (isApiREST()
+                && (syncMultipleLeads.equals(outputOperation.getValue()) || syncLead.equals(outputOperation.getValue()))) {
             String value = getEnumStoredValue(lookupField.getStoredValue());
             boolean correctValue = false;
             for (RESTLookupFields lkt : RESTLookupFields.values()) {
@@ -490,8 +514,7 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
      */
     private void checkForInvalidStoredProperties() {
         outputOperation = checkForInvalidStoredEnumProperty(outputOperation, OutputOperation.class);
-        customObjectSyncAction =
-                checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
+        customObjectSyncAction = checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
     }
 
 }

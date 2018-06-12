@@ -188,6 +188,23 @@ public class MarketoInputReader extends AbstractBoundedReader<IndexedRecord> {
                     throw new IOException(messages.getMessage("error.reader.invalid.operation"));
                 }
                 break;
+            case Company:
+                switch (properties.standardAction.getValue()) {
+                case describe:
+                    return ((MarketoRESTClient) client).describeCompanies(properties);
+                case get:
+                    return ((MarketoRESTClient) client).getCompanies(properties, position);
+                }
+                break;
+            case Opportunity:
+            case OpportunityRole:
+                switch (properties.standardAction.getValue()) {
+                case describe:
+                    return ((MarketoRESTClient) client).describeOpportunity(properties);
+                case get:
+                    return ((MarketoRESTClient) client).getOpportunities(properties, position);
+                }
+                break;
             default:
                 throw new IOException(messages.getMessage("error.reader.invalid.operation"));
             }
