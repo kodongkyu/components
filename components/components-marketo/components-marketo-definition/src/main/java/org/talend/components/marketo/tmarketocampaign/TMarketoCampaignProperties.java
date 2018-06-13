@@ -95,6 +95,10 @@ public class TMarketoCampaignProperties extends MarketoComponentWizardBaseProper
         campaignAction.setPossibleValues((Object[]) CampaignAction.values());
         campaignAction.setValue(CampaignAction.get);
         triggerCampaignForLeadsInBatch.setValue(false);
+        batchSize.setValue(300);
+        // set default schema
+        schemaInput.schema.setValue(MarketoConstants.getCampaignSchema());
+        schemaFlow.schema.setValue(MarketoConstants.getCampaignSchema());
     }
 
     @Override

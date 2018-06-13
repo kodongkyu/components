@@ -17,6 +17,7 @@ import static org.talend.components.marketo.MarketoComponentDefinition.RETURN_NB
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.get;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.getById;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.schedule;
+import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.trigger;
 
 import java.io.IOException;
 import java.util.List;
@@ -53,13 +54,11 @@ public class MarketoCampaignReader extends AbstractBoundedReader<IndexedRecord> 
 
     private int recordIndex;
 
-    private static final I18nMessages messages =
-            GlobalI18N.getI18nMessageProvider().getI18nMessages(MarketoCampaignReader.class);
+    private static final I18nMessages messages = GlobalI18N.getI18nMessageProvider().getI18nMessages(MarketoCampaignReader.class);
 
     private static final Logger LOG = LoggerFactory.getLogger(MarketoCampaignReader.class);
 
-    public MarketoCampaignReader(RuntimeContainer adaptor, MarketoSource source,
-            TMarketoCampaignProperties properties) {
+    public MarketoCampaignReader(RuntimeContainer adaptor, MarketoSource source, TMarketoCampaignProperties properties) {
         super(source);
         this.source = source;
         this.properties = properties;
@@ -121,11 +120,13 @@ public class MarketoCampaignReader extends AbstractBoundedReader<IndexedRecord> 
     }
 
     public MarketoRecordResult executeOperation(String position) throws IOException {
-        if (properties.campaignAction.getValue().equals(get)) {
+        if (get.equals(properties.campaignAction.getValue())) {
             return client.getCampaigns(properties, position);
-        } else if (properties.campaignAction.getValue().equals(getById)) {
+        } else if (getById.equals(properties.campaignAction.getValue())) {
             return client.getCampaignById(properties);
-        } else if (properties.campaignAction.getValue().equals(schedule)) {
+        } else if (schedule.equals(properties.campaignAction.getValue())) {
+            return client.scheduleCampaign(properties);
+        } else if (trigger.equals(properties.campaignAction.getValue())) {
             return client.scheduleCampaign(properties);
         }
         throw new IOException(messages.getMessage("error.reader.invalid.operation"));

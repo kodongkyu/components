@@ -12,26 +12,36 @@
 // ============================================================================
 package org.talend.components.marketo.tmarketocampaign;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
 
+import java.util.Collections;
+
+import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
+import org.talend.components.api.component.Connector;
 import org.talend.components.marketo.MarketoConstants;
 import org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction;
 import org.talend.daikon.properties.presentation.Form;
 
 public class TMarketoCampaignPropertiesTest {
 
-    @Test
-    public void testCampaign() throws Exception {
-        TMarketoCampaignProperties props = new TMarketoCampaignProperties("test");
+    TMarketoCampaignProperties props;
+
+    @Before
+    public void setUp() throws Exception {
+        props = new TMarketoCampaignProperties("test");
         props.connection.setupProperties();
         props.connection.setupLayout();
         props.schemaInput.setupProperties();
         props.schemaInput.setupLayout();
         props.setupProperties();
         props.setupLayout();
+    }
+
+    @Test
+    public void testCampaign() throws Exception {
         props.campaignAction.setValue(CampaignAction.getById);
         props.afterCampaignAction();
         assertEquals(MarketoConstants.getCampaignSchema(), props.schemaInput.schema.getValue());
@@ -80,4 +90,22 @@ public class TMarketoCampaignPropertiesTest {
         assertEquals(MarketoConstants.getEmptySchema(), props.schemaFlow.schema.getValue());
     }
 
+    @Test
+    public void testGetAllSchemaPropertiesConnectors() throws Exception {
+        assertThat(props.getAllSchemaPropertiesConnectors(true), Matchers.is(Collections.singleton(props.MAIN_CONNECTOR)));
+        assertThat(props.getAllSchemaPropertiesConnectors(false), Matchers.is(Collections.singleton(props.FLOW_CONNECTOR)));
+    }
+
+    @Test
+    public void testGetVersionNumber() throws Exception {
+        assertThat(props.getVersionNumber(), Matchers.is(1));
+    }
+
+    @Test
+    public void testCampaignActions() throws Exception {
+        assertEquals(CampaignAction.get, CampaignAction.valueOf("get"));
+        assertEquals(CampaignAction.getById, CampaignAction.valueOf("getById"));
+        assertEquals(CampaignAction.schedule, CampaignAction.valueOf("schedule"));
+        assertEquals(CampaignAction.trigger, CampaignAction.valueOf("trigger"));
+    }
 }

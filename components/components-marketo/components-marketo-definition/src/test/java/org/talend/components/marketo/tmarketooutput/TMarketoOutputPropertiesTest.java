@@ -17,8 +17,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteCompanies;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteOpportunities;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.deleteOpportunityRoles;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncCompanies;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncLead;
 import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncMultipleLeads;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncOpportunities;
+import static org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.OutputOperation.syncOpportunityRoles;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -127,6 +133,31 @@ public class TMarketoOutputPropertiesTest {
                 props.schemaFlow.schema.getValue().getFields());
         assertEquals(MarketoConstants.getSOAPOutputSchemaForSyncMultipleLeads().getFields(),
                 props.schemaReject.schema.getValue().getFields());
+        //
+        props.connection.apiMode.setValue(APIMode.REST);
+        props.outputOperation.setValue(syncCompanies);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getCompanySyncSchema(), props.schemaInput.schema.getValue());
+
+        props.outputOperation.setValue(syncOpportunities);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getOpportunitySyncSchema(), props.schemaInput.schema.getValue());
+
+        props.outputOperation.setValue(syncOpportunityRoles);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getOpportunityRoleSyncSchema(), props.schemaInput.schema.getValue());
+
+        props.outputOperation.setValue(deleteCompanies);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getCompanySyncSchema(), props.schemaInput.schema.getValue());
+
+        props.outputOperation.setValue(deleteOpportunities);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getOpportunitySyncSchema(), props.schemaInput.schema.getValue());
+
+        props.outputOperation.setValue(deleteOpportunityRoles);
+        props.afterOutputOperation();
+        assertEquals(MarketoConstants.getOpportunityRoleSyncSchema(), props.schemaInput.schema.getValue());
     }
 
     @Test
