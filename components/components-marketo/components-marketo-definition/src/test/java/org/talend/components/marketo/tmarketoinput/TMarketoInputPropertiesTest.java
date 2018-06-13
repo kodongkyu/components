@@ -976,6 +976,7 @@ public class TMarketoInputPropertiesTest extends MarketoTestBase {
     public void testValidateFetchCompoundKey() throws Exception {
         try (SandboxedInstanceTestFixture sandboxedInstanceTestFixture = new SandboxedInstanceTestFixture()) {
             sandboxedInstanceTestFixture.setUp();
+            props.inputOperation.setValue(InputOperation.CustomObject);
             props.customObjectName.setValue("car_c");
             assertEquals(Result.OK, props.validateFetchCompoundKey().getStatus());
             props.afterFetchCompoundKey();

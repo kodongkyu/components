@@ -21,6 +21,12 @@ import org.talend.components.api.component.runtime.SourceOrSink;
 
 public interface MarketoSourceOrSinkSchemaProvider extends SourceOrSink {
 
+    String RESOURCE_COMPANY = "resourceCompany";
+
+    String RESOURCE_OPPORTUNITY = "resourceOpportunity";
+
+    String RESOURCE_OPPORTUNITY_ROLE = "resourceOpportunityRole";
+
     Schema getSchemaForCustomObject(String customObjectName) throws IOException;
 
     Schema getSchemaForCompany() throws IOException;

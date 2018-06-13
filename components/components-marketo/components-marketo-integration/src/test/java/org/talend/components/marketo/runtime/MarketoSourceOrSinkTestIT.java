@@ -68,7 +68,7 @@ public class MarketoSourceOrSinkTestIT extends MarketoBaseTestIT {
         props.connection.endpoint.setValue(MarketoBaseTestIT.ENDPOINT_REST);
         props.connection.clientAccessId.setValue(MarketoBaseTestIT.USERID_REST);
         props.connection.secretKey.setValue(MarketoBaseTestIT.SECRETKEY_REST);
-        MarketoSourceOrSink sos = new MarketoSourceOrSink();
+        MarketoSourceOrSinkSchemaProvider sos = new MarketoSourceOrSink();
         sos.initialize(null, props);
         List<NamedThing> cos = sos.getSchemaNames(null);
         assertFalse(cos.isEmpty());
@@ -87,7 +87,7 @@ public class MarketoSourceOrSinkTestIT extends MarketoBaseTestIT {
         props.connection.endpoint.setValue(MarketoBaseTestIT.ENDPOINT_REST);
         props.connection.clientAccessId.setValue(MarketoBaseTestIT.USERID_REST);
         props.connection.secretKey.setValue(MarketoBaseTestIT.SECRETKEY_REST);
-        MarketoSourceOrSink sos = new MarketoSourceOrSink();
+        MarketoSourceOrSinkSchemaProvider sos = new MarketoSourceOrSink();
         sos.initialize(null, props);
         Schema s = sos.getEndpointSchema(null, "smartphone_c");
         LOG.debug("s = {}.", s);
@@ -131,13 +131,12 @@ public class MarketoSourceOrSinkTestIT extends MarketoBaseTestIT {
         sos.initialize(null, props);
         Schema s = sos.getEndpointSchema(null, "car_c");
         assertNotNull(s);
-        // TODO fails now, test when APIs enabled.
         s = sos.getSchemaForCompany();
-        assertNull(s);
+        assertNotNull(s);
         s = sos.getSchemaForOpportunity();
-        assertNull(s);
+        assertNotNull(s);
         s = sos.getSchemaForOpportunityRole();
-        assertNull(s);
+        assertNotNull(s);
     }
 
     @Test
@@ -145,13 +144,12 @@ public class MarketoSourceOrSinkTestIT extends MarketoBaseTestIT {
         sos.initialize(null, props);
         List<String> keys = sos.getCompoundKeyFields("car_c");
         assertNotNull(keys);
-        assertEquals(keys, Arrays.asList("customerId", "VIN"));// Arrays.asList("VIN", "customerId")));
-        // TODO fails now, test when APIs enabled.
-        keys = sos.getCompoundKeyFields(MarketoSourceOrSink.RESOURCE_COMPANY);
-        assertNull(keys);
+        assertEquals(keys, Arrays.asList("customerId", "VIN"));
         keys = sos.getCompoundKeyFields(MarketoSourceOrSink.RESOURCE_OPPORTUNITY);
-        assertNull(keys);
+        assertNotNull(keys);
+        assertEquals(keys, Arrays.asList("externalOpportunityId"));
         keys = sos.getCompoundKeyFields(MarketoSourceOrSink.RESOURCE_OPPORTUNITY_ROLE);
-        assertNull(keys);
+        assertEquals(keys, Arrays.asList("externalOpportunityId", "leadId", "role"));
+        assertNotNull(keys);
     }
 }

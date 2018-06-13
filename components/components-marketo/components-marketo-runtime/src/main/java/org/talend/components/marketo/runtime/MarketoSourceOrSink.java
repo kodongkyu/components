@@ -40,6 +40,7 @@ import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties;
 import org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties.APIMode;
 import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties;
+import org.talend.components.marketo.tmarketoinput.TMarketoInputProperties.StandardAction;
 import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.CustomObjectAction;
 import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties.InputOperation;
 import org.talend.daikon.NamedThing;
@@ -54,12 +55,6 @@ import org.talend.daikon.properties.ValidationResultMutable;
 import com.google.gson.Gson;
 
 public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkRuntime, MarketoSourceOrSinkSchemaProvider {
-
-    public static final String RESOURCE_COMPANY = "resourceCompany";
-
-    public static final String RESOURCE_OPPORTUNITY = "resourceOpportunity";
-
-    public static final String RESOURCE_OPPORTUNITY_ROLE = "resourceOpportunityRole";
 
     public static final String TALEND6_DYNAMIC_COLUMN_POSITION = "di.dynamic.column.position";
 
@@ -139,11 +134,29 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkRun
         TMarketoInputProperties ip = new TMarketoInputProperties("retrieveSchema");
         Schema describeSchema = MarketoConstants.getCustomObjectDescribeSchema();
         ip.connection = properties.getConnectionProperties();
-        ip.inputOperation.setValue(InputOperation.CustomObject);
-        ip.customObjectAction.setValue(CustomObjectAction.describe);
-        ip.customObjectName.setValue(schemaName);
         ip.schemaInput.schema.setValue(describeSchema);
-        MarketoRecordResult r = client.describeCustomObject(ip);
+        ip.standardAction.setValue(StandardAction.describe);
+        ip.customObjectAction.setValue(CustomObjectAction.describe);
+        MarketoRecordResult r = new MarketoRecordResult();
+        LOG.warn("[getEndpointSchema] {}", schemaName);
+        switch (schemaName) {
+        case RESOURCE_COMPANY:
+            ip.inputOperation.setValue(InputOperation.Company);
+            r = client.describeCompanies(ip);
+            break;
+        case RESOURCE_OPPORTUNITY:
+            ip.inputOperation.setValue(InputOperation.Opportunity);
+            r = client.describeOpportunity(ip);
+            break;
+        case RESOURCE_OPPORTUNITY_ROLE:
+            ip.inputOperation.setValue(InputOperation.OpportunityRole);
+            r = client.describeOpportunity(ip);
+            break;
+        default:
+            ip.inputOperation.setValue(InputOperation.CustomObject);
+            ip.customObjectName.setValue(schemaName);
+            r = client.describeCustomObject(ip);
+        }
         if (!r.isSuccess()) {
             return null;
         }
@@ -186,11 +199,25 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkRun
         TMarketoInputProperties ip = new TMarketoInputProperties("retrieveSchema");
         Schema describeSchema = MarketoConstants.getCustomObjectDescribeSchema();
         ip.connection = properties.getConnectionProperties();
-        ip.inputOperation.setValue(InputOperation.CustomObject);
         ip.customObjectAction.setValue(CustomObjectAction.describe);
-        ip.customObjectName.setValue(resource);
+        ip.standardAction.setValue(StandardAction.describe);
         ip.schemaInput.schema.setValue(describeSchema);
-        MarketoRecordResult r = client.describeCustomObject(ip);
+        MarketoRecordResult r;
+
+        switch (resource) {
+        case RESOURCE_OPPORTUNITY:
+            ip.inputOperation.setValue(InputOperation.Opportunity);
+            r = client.describeOpportunity(ip);
+            break;
+        case RESOURCE_OPPORTUNITY_ROLE:
+            ip.inputOperation.setValue(InputOperation.OpportunityRole);
+            r = client.describeOpportunity(ip);
+            break;
+        default:
+            ip.inputOperation.setValue(InputOperation.CustomObject);
+            ip.customObjectName.setValue(resource);
+            r = client.describeCustomObject(ip);
+        }
         if (!r.isSuccess()) {
             return null;
         }
