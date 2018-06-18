@@ -67,7 +67,8 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
         // check getMultipleLeads with an input
         if (properties instanceof TMarketoInputProperties) {
             // operation must be getMultipleLeads
-            if (!((TMarketoInputProperties) properties).inputOperation.getValue().equals(InputOperation.getMultipleLeads)) {
+            if (!((TMarketoInputProperties) properties).inputOperation.getValue().equals(
+                    InputOperation.getMultipleLeads)) {
                 vr.setStatus(Result.ERROR);
                 vr.setMessage(messages.getMessage("error.validation.sink.getmultipleleads.only"));
                 return vr;
@@ -95,7 +96,6 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
         if (properties instanceof TMarketoCampaignProperties) {
             TMarketoCampaignProperties p = (TMarketoCampaignProperties) properties;
             switch (p.campaignAction.getValue()) {
-            case schedule:
             case trigger:
                 if (StringUtils.isEmpty(p.campaignId.getStringValue())) {
                     vr.setStatus(Result.ERROR);
@@ -103,6 +103,10 @@ public class MarketoSink extends MarketoSourceOrSink implements Sink {
                     return vr;
                 }
                 break;
+            default:
+                vr.setStatus(Result.ERROR);
+                vr.setMessage(messages.getMessage("error.validation.campaign.operation"));
+                return vr;
             }
         }
 
