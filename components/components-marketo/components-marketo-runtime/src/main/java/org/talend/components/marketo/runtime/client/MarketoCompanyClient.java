@@ -13,7 +13,6 @@
 package org.talend.components.marketo.runtime.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,6 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
                 .append(API_PATH_COMPANIES_DESCRIBE)//
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
         String batchLimit = String.valueOf(parameters.batchSize.getValue());
-        // TODO change this
         String filterType = parameters.customObjectFilterType.getValue();
         String filterValues = parameters.customObjectFilterValues.getValue();
         //
@@ -72,14 +70,12 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
     public MarketoRecordResult getCompanies(TMarketoInputProperties parameters, String offset) {
         String filterType = parameters.customObjectFilterType.getValue();
         String filterValues = parameters.customObjectFilterValues.getValue();
-        // if fields is unset : id, dedupeFields (defined in mkto), updatedAt, createdAt will be returned.
         List<String> fields = new ArrayList<>();
         for (String f : parameters.getSchemaFields()) {
             if (!f.equals(FIELD_ID) && !f.equals(MarketoConstants.FIELD_SEQ)) {
                 fields.add(f);
             }
         }
-        //
         int batchLimit = parameters.batchSize.getValue() > REST_API_BATCH_LIMIT ? REST_API_BATCH_LIMIT
                 : parameters.batchSize.getValue();
         current_uri = new StringBuilder(basicPath)//
@@ -95,16 +91,7 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
             current_uri.append(fmtParams(FIELD_NEXT_PAGE_TOKEN, offset));
         }
         LOG.debug("getCompanies : {}.", current_uri);
-        MarketoRecordResult mkto = new MarketoRecordResult();
-        try {
-            mkto = executeGetRequest(parameters.schemaInput.schema.getValue());
-        } catch (MarketoException e) {
-            LOG.error("{}.", e);
-            mkto.setSuccess(false);
-            mkto.setRecordCount(0);
-            mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        }
-        return mkto;
+        return getRecordResultForFromRequestBySchema(parameters.schemaInput.schema.getValue(), false, null);
     }
 
     public MarketoSyncResult syncCompanies(TMarketoOutputProperties parameters, List<IndexedRecord> records) {
@@ -132,26 +119,6 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
 
         LOG.debug("syncCompanies {}{}.", current_uri, inputJson);
         return getSyncResultFromRequest(true, inputJson);
-        // try {
-        //
-        // SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-        // //
-        // mkto.setRequestId(REST + "::" + rs.getRequestId());
-        // mkto.setStreamPosition(rs.getNextPageToken());
-        // mkto.setSuccess(rs.isSuccess());
-        // if (mkto.isSuccess()) {
-        // mkto.setRecordCount(rs.getResult().size());
-        // mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-        // mkto.setRecords(rs.getResult());
-        // } else {
-        // mkto.setRecordCount(0);
-        // mkto.setErrors(Arrays.asList(rs.getErrors().get(0)));
-        // }
-        // } catch (MarketoException e) {
-        // mkto.setSuccess(false);
-        // mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        // }
-        // return mkto;
     }
 
     public MarketoSyncResult deleteCompany(TMarketoOutputProperties parameters, List<IndexedRecord> records) {
@@ -176,27 +143,6 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
                 .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));
         LOG.debug("deleteCompany {}{}.", current_uri, inputJson);
         return getSyncResultFromRequest(true, inputJson);
-        // TODO create a wrapper for post
-        // MarketoSyncResult mkto = new MarketoSyncResult();
-        // try {
-        // LOG.debug("deleteCompanies {}{}.", current_uri, inputJson);
-        // SyncResult rs = (SyncResult) executePostRequest(SyncResult.class, inputJson);
-        // mkto.setRequestId(REST + "::" + rs.getRequestId());
-        // mkto.setStreamPosition(rs.getNextPageToken());
-        // mkto.setSuccess(rs.isSuccess());
-        // if (mkto.isSuccess()) {
-        // mkto.setRecordCount(rs.getResult().size());
-        // mkto.setRemainCount(mkto.getStreamPosition() != null ? mkto.getRecordCount() : 0);
-        // mkto.setRecords(rs.getResult());
-        // } else {
-        // mkto.setRecordCount(0);
-        // mkto.setErrors(Arrays.asList(new MarketoError(REST, "Could not delete Company.")));
-        // }
-        // } catch (MarketoException e) {
-        // mkto.setSuccess(false);
-        // mkto.setErrors(Arrays.asList(e.toMarketoError()));
-        // }
-        // return mkto;
     }
 
 }

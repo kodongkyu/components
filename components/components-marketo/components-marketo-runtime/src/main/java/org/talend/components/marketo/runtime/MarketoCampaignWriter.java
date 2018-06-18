@@ -44,7 +44,7 @@ public class MarketoCampaignWriter extends MarketoWriter {
     public void open(String uId) throws IOException {
         super.open(uId);
 
-        properties = (TMarketoCampaignProperties) sink.properties;
+        properties = (TMarketoCampaignProperties) sink.getProperties();
         inputSchema = properties.schemaInput.schema.getValue();
         flowSchema = properties.schemaFlow.schema.getValue();
         rejectSchema = properties.schemaReject.schema.getValue();

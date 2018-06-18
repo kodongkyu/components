@@ -25,16 +25,16 @@ import java.util.Set;
 
 import org.apache.commons.lang3.reflect.TypeLiteral;
 import org.talend.components.api.component.PropertyPathConnector;
+import org.talend.components.marketo.MarketoComponentProperties;
 import org.talend.components.marketo.MarketoConstants;
 import org.talend.components.marketo.helpers.TokenTable;
 import org.talend.components.marketo.tmarketoconnection.TMarketoConnectionProperties.APIMode;
-import org.talend.components.marketo.wizard.MarketoComponentWizardBaseProperties;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.daikon.properties.presentation.Widget;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.serialize.migration.SerializeSetVersion;
 
-public class TMarketoCampaignProperties extends MarketoComponentWizardBaseProperties implements SerializeSetVersion {
+public class TMarketoCampaignProperties extends MarketoComponentProperties implements SerializeSetVersion {
 
     public enum CampaignAction {
         get,
@@ -92,7 +92,7 @@ public class TMarketoCampaignProperties extends MarketoComponentWizardBaseProper
         connection.apiMode.setValue(APIMode.REST);
         connection.apiMode.setPossibleValues(APIMode.REST);
         //
-        campaignAction.setPossibleValues((Object[]) CampaignAction.values());
+        campaignAction.setPossibleValues(CampaignAction.values());
         campaignAction.setValue(CampaignAction.get);
         triggerCampaignForLeadsInBatch.setValue(false);
         batchSize.setValue(300);
