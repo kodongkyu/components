@@ -18,6 +18,7 @@ import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignPro
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.getById;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.schedule;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.trigger;
+import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.TriggerAction.request;
 
 import java.io.IOException;
 import java.util.List;
@@ -126,8 +127,8 @@ public class MarketoCampaignReader extends AbstractBoundedReader<IndexedRecord> 
             return client.getCampaignById(properties);
         } else if (schedule.equals(properties.campaignAction.getValue())) {
             return client.scheduleCampaign(properties);
-        } else if (trigger.equals(properties.campaignAction.getValue())) {
-            return client.scheduleCampaign(properties);
+        } else if (trigger.equals(properties.campaignAction.getValue()) && !request.equals(properties.triggerAction.getValue())) {
+            return client.activateDeactivateCampaign(properties);
         }
         throw new IOException(messages.getMessage("error.reader.invalid.operation"));
     }

@@ -44,6 +44,8 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
 
     public static final String API_PATH_CAMPAIGNS_TRIGGER = API_PATH_CAMPAIGNS + "/%s/trigger.json";
 
+    public static final String API_PATH_CAMPAIGN_TRIGGER_DESACTIVATE_ACTIVATE = "/asset/v1/smartCampaign/%s/%s.json";
+
     public static final String FIELD_PROGRAM_NAME = "programName";
 
     public static final String FIELD_WORKSPACE_NAME = "workspaceName";
@@ -121,8 +123,8 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
     /**
      * ScheduleCampaignRequest
      *
-     * Remotely schedules a batch campaign to run at a given time. My tokens local to the campaign's parent program call
-     * be overridden for the run to customize content.
+     * Remotely schedules a batch campaign to run at a given time. My tokens local to the campaign's parent program call be
+     * overridden for the run to customize content.
      *
      */
     public MarketoRecordResult scheduleCampaign(TMarketoCampaignProperties parameters) {
@@ -175,11 +177,22 @@ public class MarketoCampaignClient extends MarketoBulkExecClient {
     /**
      * triggerCampaign (aka requestCampaign)
      *
-     * Passes a set of leads to a trigger campaign to run through the campaign's flow. The designated campaign must have
-     * a Campaign is Requested: Web Service API trigger, and must be active. My tokens local to the campaign's parent
-     * program can be overridden for the run to customize content
+     * Passes a set of leads to a trigger campaign to run through the campaign's flow. The designated campaign must have a
+     * Campaign is Requested: Web Service API trigger, and must be active. My tokens local to the campaign's parent program
+     * can be overridden for the run to customize content
      */
-    public MarketoSyncResult triggerCampaign(TMarketoCampaignProperties parameters, List<IndexedRecord> records) {
+
+    public MarketoRecordResult activateDeactivateCampaign(TMarketoCampaignProperties parameters) {
+        String campaignId = parameters.campaignId.getStringValue();
+        String action = parameters.triggerAction.getValue().name();
+        current_uri = new StringBuilder(basicPath)//
+                .append(String.format(API_PATH_CAMPAIGN_TRIGGER_DESACTIVATE_ACTIVATE, campaignId, action))//
+                .append(fmtParams(FIELD_ACCESS_TOKEN, accessToken, true));//
+        LOG.debug("[activateDeactivateCampaign] ({}) {}.", action, current_uri);
+        return getRecordResultFromPostRequest(parameters.schemaFlow.schema.getValue(), new JsonObject());
+    }
+
+    public MarketoSyncResult requestCampaign(TMarketoCampaignProperties parameters, List<IndexedRecord> records) {
         String campaignId = parameters.campaignId.getStringValue();
         JsonObject inputJson = new JsonObject();
         Gson gson = new Gson();

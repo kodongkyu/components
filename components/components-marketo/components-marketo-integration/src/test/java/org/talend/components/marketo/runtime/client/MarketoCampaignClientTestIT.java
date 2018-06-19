@@ -17,6 +17,8 @@ import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignPro
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.getById;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.schedule;
 import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.CampaignAction.trigger;
+import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.TriggerAction.activate;
+import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.TriggerAction.deactivate;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,6 +39,7 @@ import org.talend.components.marketo.runtime.MarketoSource;
 import org.talend.components.marketo.runtime.client.type.MarketoRecordResult;
 import org.talend.components.marketo.runtime.client.type.MarketoSyncResult;
 import org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties;
+import org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.TriggerAction;
 
 public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
 
@@ -274,6 +277,61 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
      * Trigger Campaigns
      *
      */
+
+    private Boolean isCampaignActive(int id) throws IOException {
+        iprops.campaignAction.setValue(getById);
+        iprops.campaignId.setValue(id);
+        iprops.afterCampaignAction();
+        MarketoRecordResult cmp = getClient(iprops).getCampaignById(iprops);
+        assertEquals(1, cmp.getRecordCount());
+        assertEquals(0, cmp.getRemainCount());
+        IndexedRecord record = cmp.getRecords().get(0);
+        assertNotNull(record);
+        if (record.get(s.getField("active").pos()).toString().equals("true")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private MarketoRecordResult activateDeactiveCampaign(int id, boolean activate) throws IOException {
+        iprops.campaignAction.setValue(trigger);
+        iprops.triggerAction.setValue(activate ? TriggerAction.activate : TriggerAction.deactivate);
+        iprops.campaignId.setValue(TRIGGER_CAMPAIGN);
+        iprops.afterCampaignAction();
+        return getClient(iprops).activateDeactivateCampaign(iprops);
+    }
+
+    @Test
+    public void testActivateTriggerCampaign() throws Exception {
+        if (isCampaignActive(TRIGGER_CAMPAIGN)) {
+            activateDeactiveCampaign(TRIGGER_CAMPAIGN, false);
+        }
+        iprops.campaignAction.setValue(trigger);
+        iprops.triggerAction.setValue(activate);
+        iprops.campaignId.setValue(TRIGGER_CAMPAIGN);
+        iprops.afterCampaignAction();
+        MarketoRecordResult rs = getClient(iprops).activateDeactivateCampaign(iprops);
+        LOG.debug("[testActivateTriggerCampaign] {}", rs);
+        assertTrue(rs.isSuccess());
+        assertEquals(TRIGGER_CAMPAIGN, rs.getRecords().get(0).get(0));
+    }
+
+    @Test
+    public void testDeactivateTriggerCampaign() throws Exception {
+        if (!isCampaignActive(TRIGGER_CAMPAIGN)) {
+            activateDeactiveCampaign(TRIGGER_CAMPAIGN, true);
+        }
+        iprops.campaignAction.setValue(trigger);
+        iprops.triggerAction.setValue(deactivate);
+        iprops.campaignId.setValue(TRIGGER_CAMPAIGN);
+        iprops.afterCampaignAction();
+        MarketoRecordResult rs = getClient(iprops).activateDeactivateCampaign(iprops);
+        LOG.debug("[testActivateTriggerCampaign] {}", rs);
+        assertTrue(rs.isSuccess());
+        assertEquals(TRIGGER_CAMPAIGN, rs.getRecords().get(0).get(0));
+    }
+
     @Test
     public void testTriggerCampaign() throws Exception {
         iprops.campaignAction.setValue(trigger);
@@ -285,7 +343,7 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
         IndexedRecord r0;
         r0 = new Record(s);
         r0.put(0, MY_LEAD_ID);
-        MarketoSyncResult rs = getClient(iprops).triggerCampaign(iprops, Collections.singletonList(r0));
+        MarketoSyncResult rs = getClient(iprops).requestCampaign(iprops, Collections.singletonList(r0));
         LOG.debug("[testTriggerCampaign] {}", rs);
         assertTrue(rs.isSuccess());
         assertEquals(TRIGGER_CAMPAIGN, rs.getRecords().get(0).getId());
@@ -304,7 +362,7 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
         IndexedRecord r0;
         r0 = new Record(s);
         r0.put(0, MY_LEAD_ID);
-        MarketoSyncResult rs = getClient(iprops).triggerCampaign(iprops, Collections.singletonList(r0));
+        MarketoSyncResult rs = getClient(iprops).requestCampaign(iprops, Collections.singletonList(r0));
         LOG.debug("[testTriggerCampaign] {}", rs);
         assertTrue(rs.isSuccess());
         assertEquals(TRIGGER_CAMPAIGN, rs.getRecords().get(0).getId());
@@ -323,7 +381,7 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
         IndexedRecord r0;
         r0 = new Record(s);
         r0.put(0, MY_LEAD_ID);
-        MarketoSyncResult rs = getClient(iprops).triggerCampaign(iprops, Collections.singletonList(r0));
+        MarketoSyncResult rs = getClient(iprops).requestCampaign(iprops, Collections.singletonList(r0));
         LOG.debug("[testTriggerCampaign] {}", rs);
         assertFalse(rs.isSuccess());
         assertEquals("{[1003] Invalid token value: [\"undxTokenone\",\"undxTokentwo\"] }", rs.getErrorsString());
@@ -331,6 +389,9 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
 
     @Test
     public void testTriggerCampaignFail() throws Exception {
+        if (!isCampaignActive(TRIGGER_CAMPAIGN)) {
+            activateDeactiveCampaign(TRIGGER_CAMPAIGN, true);
+        }
         iprops.campaignAction.setValue(trigger);
         iprops.campaignId.setValue(TRIGGER_CAMPAIGN);
         iprops.afterCampaignAction();
@@ -343,7 +404,7 @@ public class MarketoCampaignClientTestIT extends MarketoBaseTestIT {
         r1.put(0, 84);
         r2 = new Record(s);
         r2.put(0, 85);
-        MarketoSyncResult rs = getClient(iprops).triggerCampaign(iprops, Arrays.asList(r0, r1, r2));
+        MarketoSyncResult rs = getClient(iprops).requestCampaign(iprops, Arrays.asList(r0, r1, r2));
         LOG.debug("[testTriggerCampaign] {}", rs);
         assertFalse(rs.isSuccess());
         assertEquals("{[1004] Lead [84, 85] not found}", rs.getErrorsString());

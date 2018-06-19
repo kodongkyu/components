@@ -519,6 +519,17 @@ public class MarketoConstants {
         return s;
     }
 
+    public static Schema triggerActivateDeactivateCampaignSchemaFlow() {
+        Schema s = SchemaBuilder.builder().record("triggerActivateDeactivateCampaign").fields() //
+                .name("id")//
+                .prop(SchemaConstants.TALEND_COLUMN_IS_KEY, "true")//
+                .prop(SchemaConstants.TALEND_IS_LOCKED, "true")//
+                .type().nullable().intType().noDefault() //
+                .endRecord();
+        s.addProp(SchemaConstants.TALEND_IS_LOCKED, "true");
+        return s;
+    }
+
     /*
      * Companies
      */

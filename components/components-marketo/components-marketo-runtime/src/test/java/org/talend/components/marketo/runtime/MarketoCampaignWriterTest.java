@@ -89,16 +89,10 @@ public class MarketoCampaignWriterTest extends MarketoRuntimeTestBase {
         ss.setId(123);
         rr.add(ss);
         msr.setRecords(rr);
-        doReturn(msr).when(client).triggerCampaign(any(TMarketoCampaignProperties.class), any(List.class));
+        doReturn(msr).when(client).requestCampaign(any(TMarketoCampaignProperties.class), any(List.class));
         writer.open("test");
         writer.write(null);
         writer.write(record);
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void testFlush() throws Exception {
-        // nop
-        writer.flush();
     }
 
     @Test

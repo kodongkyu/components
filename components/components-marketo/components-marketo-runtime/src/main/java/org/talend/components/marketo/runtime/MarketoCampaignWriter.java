@@ -74,7 +74,7 @@ public class MarketoCampaignWriter extends MarketoWriter {
         //
         recordsToProcess.add(inputRecord);
         if (recordsToProcess.size() >= batchSize) {
-            processResult(((MarketoRESTClient) client).triggerCampaign(properties, recordsToProcess));
+            processResult(((MarketoRESTClient) client).requestCampaign(properties, recordsToProcess));
             recordsToProcess.clear();
         }
     }
@@ -82,7 +82,7 @@ public class MarketoCampaignWriter extends MarketoWriter {
     @Override
     public Result close() throws IOException {
         if (!recordsToProcess.isEmpty()) {
-            processResult(((MarketoRESTClient) client).triggerCampaign(properties, recordsToProcess));
+            processResult(((MarketoRESTClient) client).requestCampaign(properties, recordsToProcess));
         }
         recordsToProcess.clear();
         return super.close();
@@ -90,7 +90,6 @@ public class MarketoCampaignWriter extends MarketoWriter {
 
     @Override
     protected void flush() {
-        throw new UnsupportedOperationException("#flush()");
     }
 
     public void processResult(MarketoSyncResult mktoResult) throws IOException {

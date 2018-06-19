@@ -331,7 +331,6 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
             wr.close();
             int responseCode = urlConn.getResponseCode();
             if (responseCode == 200) {
-
                 InputStream inStream = urlConn.getInputStream();
                 InputStreamReader reader = new InputStreamReader(inStream);
                 Gson gson = new Gson();
@@ -481,6 +480,54 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
         }
     }
 
+    public MarketoRecordResult getRecordResultFromPostRequest(Schema schema, JsonObject inputJson) {
+        MarketoRecordResult mkto = new MarketoRecordResult();
+        try {
+            URL url = new URL(current_uri.toString());
+            HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
+            urlConn.setRequestMethod("POST");
+            urlConn.setRequestProperty(REQUEST_PROPERTY_CONTENT_TYPE, REQUEST_VALUE_APPLICATION_JSON);// "application/json"
+            // content-type is
+            // required.
+            urlConn.setRequestProperty(REQUEST_PROPERTY_ACCEPT, REQUEST_VALUE_TEXT_JSON);
+            urlConn.setDoOutput(true);
+            OutputStreamWriter wr = new OutputStreamWriter(urlConn.getOutputStream());
+            wr.write(inputJson.toString());
+            wr.flush();
+            wr.close();
+            int responseCode = urlConn.getResponseCode();
+            if (responseCode == 200) {
+                InputStream inStream = urlConn.getInputStream();
+                InputStreamReader reader = new InputStreamReader(inStream);
+                Gson gson = new Gson();
+                LinkedTreeMap ltm = (LinkedTreeMap) gson.fromJson(reader, Object.class);
+                mkto.setRequestId(REST + "::" + ltm.get("requestId"));
+                mkto.setSuccess(Boolean.parseBoolean(ltm.get("success").toString()));
+
+                List<LinkedTreeMap> tmp = (List<LinkedTreeMap>) ltm.get("result");
+                if (tmp != null) {
+                    mkto.setRecordCount(tmp.size());
+                    mkto.setRecords(parseRecords(tmp, schema));
+                }
+
+                return mkto;
+            } else {
+                LOG.error("POST request failed: {}", responseCode);
+                mkto.setSuccess(false);
+                mkto.setRecordCount(0);
+                mkto.setErrors(Collections.singletonList(new MarketoError(REST, String.valueOf(responseCode),
+                        "Request failed! Please check your request setting!")));
+            }
+        } catch (IOException e) {
+            LOG.error("{}.", e);
+            mkto.setSuccess(false);
+            mkto.setRecordCount(0);
+            mkto.setErrors(Collections.singletonList(new MarketoError(REST, e.getMessage())));
+        }
+
+        return mkto;
+    }
+
     public MarketoRecordResult executePostRequest(JsonObject inputJson) throws MarketoException {
         try {
             URL url = new URL(current_uri.toString());
@@ -504,6 +551,7 @@ public abstract class MarketoBaseRESTClient extends MarketoClient {
                 MarketoRecordResult mkr = new MarketoRecordResult();
                 mkr.setRequestId(REST + "::" + ltm.get("requestId"));
                 mkr.setSuccess(Boolean.parseBoolean(ltm.get("success").toString()));
+
                 return mkr;
             } else {
                 LOG.error("POST request failed: {}", responseCode);

@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.components.marketo.tmarketocampaign;
 
+import static org.talend.components.marketo.tmarketocampaign.TMarketoCampaignProperties.TriggerAction.request;
 import static org.talend.daikon.properties.presentation.Widget.widget;
 import static org.talend.daikon.properties.property.PropertyFactory.newBoolean;
 import static org.talend.daikon.properties.property.PropertyFactory.newEnum;
@@ -43,7 +44,15 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
         trigger
     }
 
+    public enum TriggerAction {
+        request,
+        activate,
+        deactivate
+    }
+
     public Property<CampaignAction> campaignAction = newEnum("campaignAction", CampaignAction.class);
+
+    public Property<TriggerAction> triggerAction = newEnum("triggerAction", TriggerAction.class);
 
     public Property<Integer> campaignId = newInteger("campaignId").setRequired();
 
@@ -94,6 +103,8 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
         //
         campaignAction.setPossibleValues(CampaignAction.values());
         campaignAction.setValue(CampaignAction.get);
+        triggerAction.setPossibleValues(TriggerAction.values());
+        triggerAction.setValue(request);
         triggerCampaignForLeadsInBatch.setValue(false);
         batchSize.setValue(300);
         // set default schema
@@ -107,6 +118,7 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
 
         Form mainForm = getForm(Form.MAIN);
         mainForm.addRow(campaignAction);
+        mainForm.addColumn(triggerAction);
         mainForm.addRow(campaignId);
         mainForm.addRow(campaignIds);
         mainForm.addRow(campaignNames);
@@ -126,6 +138,7 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
 
         if (form.getName().equals(Form.MAIN)) {
             // first hide everything
+            form.getWidget(triggerAction.getName()).setVisible(false);
             form.getWidget(campaignId.getName()).setVisible(false);
             form.getWidget(campaignIds.getName()).setVisible(false);
             form.getWidget(campaignNames.getName()).setVisible(false);
@@ -154,10 +167,13 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
                 form.getWidget(campaignTokens.getName()).setVisible(true);
                 break;
             case trigger:
+                form.getWidget(triggerAction.getName()).setVisible(true);
                 form.getWidget(campaignId.getName()).setVisible(true);
-                form.getWidget(campaignTokens.getName()).setVisible(true);
-                form.getWidget(triggerCampaignForLeadsInBatch.getName()).setVisible(true);
-                form.getWidget(batchSize.getName()).setVisible(triggerCampaignForLeadsInBatch.getValue());
+                if (request.equals(triggerAction.getValue())) {
+                    form.getWidget(campaignTokens.getName()).setVisible(true);
+                    form.getWidget(triggerCampaignForLeadsInBatch.getName()).setVisible(true);
+                    form.getWidget(batchSize.getName()).setVisible(triggerCampaignForLeadsInBatch.getValue());
+                }
                 break;
             }
         }
@@ -180,11 +196,17 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
             schemaFlow.schema.setValue(MarketoConstants.scheduleCampaignSchema());
             break;
         case trigger:
-            schemaInput.schema.setValue(MarketoConstants.triggerCampaignSchema());
-            if (triggerCampaignForLeadsInBatch.getValue()) {
-                schemaFlow.schema.setValue(MarketoConstants.getEmptySchema());
+            if (request.equals(triggerAction.getValue())) {
+                schemaInput.schema.setValue(MarketoConstants.triggerCampaignSchema());
+                if (triggerCampaignForLeadsInBatch.getValue()) {
+                    schemaFlow.schema.setValue(MarketoConstants.getEmptySchema());
+                } else {
+                    schemaFlow.schema.setValue(MarketoConstants.triggerCampaignSchemaFlow());
+                }
             } else {
-                schemaFlow.schema.setValue(MarketoConstants.triggerCampaignSchemaFlow());
+                schemaInput.schema.setValue(MarketoConstants.getEmptySchema());
+                // TODO co sync maybe better
+                schemaFlow.schema.setValue(MarketoConstants.triggerActivateDeactivateCampaignSchemaFlow());
             }
             break;
         }
@@ -192,6 +214,10 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
     }
 
     public void afterTriggerCampaignForLeadsInBatch() {
+        afterCampaignAction();
+    }
+
+    public void afterTriggerAction() {
         afterCampaignAction();
     }
 

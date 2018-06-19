@@ -119,17 +119,17 @@ public class MarketoCampaignClientTest extends MarketoLeadClientTest {
         record = new Record(s);
         record.put(0, "123456");
         records.add(record);
-        mktoSR = client.triggerCampaign(props, records);
+        mktoSR = client.requestCampaign(props, records);
         assertFalse(mktoSR.isSuccess());
         assertFalse(mktoSR.getErrorsString().isEmpty());
         //
         doReturn(new SyncResult()).when(client).executePostRequest(eq(SyncResult.class), any(JsonObject.class));
-        mktoSR = client.triggerCampaign(props, records);
+        mktoSR = client.requestCampaign(props, records);
         assertFalse(mktoSR.isSuccess());
         //
         doReturn(getListOperationResult(true, "deleted")).when(client).executePostRequest(eq(SyncResult.class),
                 any(JsonObject.class));
-        mktoSR = client.triggerCampaign(props, records);
+        mktoSR = client.requestCampaign(props, records);
         assertTrue(mktoSR.isSuccess());
         assertTrue(mktoSR.getErrorsString().isEmpty());
     }
