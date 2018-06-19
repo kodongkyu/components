@@ -205,7 +205,6 @@ public class TMarketoCampaignProperties extends MarketoComponentProperties imple
                 }
             } else {
                 schemaInput.schema.setValue(MarketoConstants.getEmptySchema());
-                // TODO co sync maybe better
                 schemaFlow.schema.setValue(MarketoConstants.triggerActivateDeactivateCampaignSchemaFlow());
             }
             break;

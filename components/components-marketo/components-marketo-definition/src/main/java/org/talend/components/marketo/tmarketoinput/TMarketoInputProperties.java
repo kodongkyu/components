@@ -615,7 +615,6 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
                 }
             }
             // Companies
-            // TODO add fetch schema for companies
             if (inputOperation.getValue().equals(Company)) {
                 form.getWidget(mappingInput.getName()).setVisible(false);
                 form.getWidget(standardAction.getName()).setVisible(true);
