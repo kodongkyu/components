@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -94,8 +94,7 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
     public Property<String> customLookupField = newString("customLookupField");
 
     /*
-     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to
-     * create
+     * Select this check box to de-duplicate and update lead records using email address. Deselect this check box to create
      * another lead which contains the same email address.
      */
     public Property<Boolean> deDupeEnabled = newBoolean("deDupeEnabled");
@@ -114,15 +113,14 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
 
     public Property<String> customObjectDedupeBy = newString("customObjectDedupeBy");
 
-    public Property<CustomObjectDeleteBy> customObjectDeleteBy =
-            newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
+    public Property<CustomObjectDeleteBy> customObjectDeleteBy = newEnum("customObjectDeleteBy", CustomObjectDeleteBy.class);
 
     public Property<Boolean> deleteLeadsInBatch = newBoolean("deleteLeadsInBatch");
 
     private static final Logger LOG = LoggerFactory.getLogger(TMarketoOutputProperties.class);
 
-    private static final I18nMessages messages =
-            GlobalI18N.getI18nMessageProvider().getI18nMessages(TMarketoOutputProperties.class);
+    private static final I18nMessages messages = GlobalI18N.getI18nMessageProvider()
+            .getI18nMessages(TMarketoOutputProperties.class);
 
     public TMarketoOutputProperties(String name) {
         super(name);
@@ -483,8 +481,8 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
         }
         checkForInvalidStoredProperties();
         // migrate CustomLookup
-        if (isApiREST() && (syncMultipleLeads.equals(outputOperation.getValue())
-                || syncLead.equals(outputOperation.getValue()))) {
+        if (isApiREST()
+                && (syncMultipleLeads.equals(outputOperation.getValue()) || syncLead.equals(outputOperation.getValue()))) {
             String value = getEnumStoredValue(lookupField.getStoredValue());
             boolean correctValue = false;
             for (RESTLookupFields lkt : RESTLookupFields.values()) {
@@ -516,8 +514,7 @@ public class TMarketoOutputProperties extends MarketoComponentWizardBaseProperti
      */
     private void checkForInvalidStoredProperties() {
         outputOperation = checkForInvalidStoredEnumProperty(outputOperation, OutputOperation.class);
-        customObjectSyncAction =
-                checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
+        customObjectSyncAction = checkForInvalidStoredEnumProperty(customObjectSyncAction, CustomObjectSyncAction.class);
     }
 
 }

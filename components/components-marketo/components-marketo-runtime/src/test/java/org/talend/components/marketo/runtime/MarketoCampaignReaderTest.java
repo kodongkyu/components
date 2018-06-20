@@ -50,17 +50,8 @@ public class MarketoCampaignReaderTest extends MarketoRuntimeTestBase {
     }
 
     @Test
-    public void testStart() throws Exception {
-    }
-
-    @Test
-    public void testAdvance() throws Exception {
-    }
-
-    @Test
     public void testGetCurrent() throws Exception {
-        when(client.getCampaigns(any(TMarketoCampaignProperties.class), any(String.class)))
-                .thenReturn(getLeadRecordResult(true));
+        when(client.getCampaigns(any(TMarketoCampaignProperties.class), any(String.class))).thenReturn(getLeadRecordResult(true));
         assertTrue(reader.start());
         assertNotNull(reader.getCurrent());
         assertTrue(reader.advance());
@@ -75,11 +66,4 @@ public class MarketoCampaignReaderTest extends MarketoRuntimeTestBase {
         assertNotNull(reader.getReturnValues());
     }
 
-    @Test
-    public void testGetReturnValues() throws Exception {
-    }
-
-    @Test
-    public void testExecuteOperation() throws Exception {
-    }
 }

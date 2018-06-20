@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -11,6 +11,8 @@
 //
 // ============================================================================
 package org.talend.components.marketo;
+
+import aQute.bnd.annotation.component.Component;
 
 import org.talend.components.api.AbstractComponentFamilyDefinition;
 import org.talend.components.api.ComponentInstaller;
@@ -29,11 +31,8 @@ import org.talend.components.marketo.wizard.MarketoConnectionWizardDefinition;
 
 import com.google.auto.service.AutoService;
 
-import aQute.bnd.annotation.component.Component;
-
 @AutoService(ComponentInstaller.class)
-@Component(name = Constants.COMPONENT_INSTALLER_PREFIX + MarketoFamilyDefinition.NAME,
-        provide = ComponentInstaller.class)
+@Component(name = Constants.COMPONENT_INSTALLER_PREFIX + MarketoFamilyDefinition.NAME, provide = ComponentInstaller.class)
 public class MarketoFamilyDefinition extends AbstractComponentFamilyDefinition implements ComponentInstaller {
 
     public static final String NAME = "Marketo";

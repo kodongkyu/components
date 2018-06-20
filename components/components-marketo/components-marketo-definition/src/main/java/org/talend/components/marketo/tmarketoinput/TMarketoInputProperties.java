@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -615,7 +615,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
                 }
             }
             // Companies
-            if (inputOperation.getValue().equals(Company)) {
+            if (Company.equals(inputOperation.getValue())) {
                 form.getWidget(mappingInput.getName()).setVisible(false);
                 form.getWidget(standardAction.getName()).setVisible(true);
                 switch (standardAction.getValue()) {
@@ -630,7 +630,7 @@ public class TMarketoInputProperties extends MarketoComponentWizardBasePropertie
                 }
             }
             // Opportunities*
-            if (inputOperation.getValue().equals(Opportunity) || inputOperation.getValue().equals(OpportunityRole)) {
+            if (Opportunity.equals(inputOperation.getValue()) || OpportunityRole.equals(inputOperation.getValue())) {
                 form.getWidget(mappingInput.getName()).setVisible(false);
                 form.getWidget(standardAction.getName()).setVisible(true);
                 switch (standardAction.getValue()) {

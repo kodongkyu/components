@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -59,8 +59,7 @@ public class MarketoCompanyClient extends MarketoCampaignClient {
         String filterType = parameters.customObjectFilterType.getValue();
         String filterValues = parameters.customObjectFilterValues.getValue();
         //
-        current_uri
-                .append(fmtParams(FIELD_BATCH_SIZE, batchLimit))//
+        current_uri.append(fmtParams(FIELD_BATCH_SIZE, batchLimit))//
                 .append(fmtParams("filterType", filterType))//
                 .append(fmtParams("filterValues", filterValues));
         LOG.debug("describeCompanies : {}.", current_uri);

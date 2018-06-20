@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -77,8 +77,7 @@ public class FieldDescriptionTest {
 
     @Test
     public void testToString() throws Exception {
-        assertEquals(
-                "FieldDescription{id=null, displayName='null', dataType='null', length=null, rest=null, soap=null}",
+        assertEquals("FieldDescription{id=null, displayName='null', dataType='null', length=null, rest=null, soap=null}",
                 fd.toString());
     }
 

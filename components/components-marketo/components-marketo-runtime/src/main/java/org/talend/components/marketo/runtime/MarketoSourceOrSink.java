@@ -1,6 +1,6 @@
 // ============================================================================
 //
-// Copyright (C) 2006-2017 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2018 Talend Inc. - www.talend.com
 //
 // This source code is available under agreement available at
 // %InstallDIR%\features\org.talend.rcp.branding.%PRODUCTNAME%\%PRODUCTNAME%license.txt
@@ -138,7 +138,6 @@ public class MarketoSourceOrSink implements SourceOrSink, MarketoSourceOrSinkRun
         ip.standardAction.setValue(StandardAction.describe);
         ip.customObjectAction.setValue(CustomObjectAction.describe);
         MarketoRecordResult r = new MarketoRecordResult();
-        LOG.warn("[getEndpointSchema] {}", schemaName);
         switch (schemaName) {
         case RESOURCE_COMPANY:
             ip.inputOperation.setValue(InputOperation.Company);
