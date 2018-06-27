@@ -56,7 +56,7 @@ public class AzureStorageQueueService {
         CloudQueue queueRef = client.getQueueReference(queueName);
         boolean creationResult;
         try {
-            creationResult = queueRef.createIfNotExists();
+            creationResult = queueRef.createIfNotExists(null, AzureStorageUtils.getTalendOperationContext());
         } catch (StorageException e) {
             if (!e.getErrorCode().equals(StorageErrorCodeStrings.QUEUE_BEING_DELETED)) {
                 throw e;
@@ -70,7 +70,7 @@ public class AzureStorageQueueService {
             } catch (InterruptedException eint) {
                 throw new RuntimeException(messages.getMessage("error.InterruptedException"));
             }
-            creationResult = queueRef.createIfNotExists();
+            creationResult = queueRef.createIfNotExists(null, AzureStorageUtils.getTalendOperationContext());
             LOGGER.debug(messages.getMessage("debug.QueueCreated", queueRef.getName()));
         }
 

@@ -12,20 +12,6 @@
 // ============================================================================
 package org.talend.components.azurestorage.table;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-
-import com.microsoft.azure.storage.OperationContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.talend.components.azurestorage.AzureConnection;
-import org.talend.components.azurestorage.table.tazurestorageoutputtable.TAzureStorageOutputTableProperties.ActionOnTable;
-
 import com.microsoft.azure.storage.StorageErrorCodeStrings;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.table.CloudTable;
@@ -36,7 +22,16 @@ import com.microsoft.azure.storage.table.TableOperation;
 import com.microsoft.azure.storage.table.TableQuery;
 import com.microsoft.azure.storage.table.TableResult;
 import com.microsoft.azure.storage.table.TableServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.talend.components.azurestorage.AzureConnection;
+import org.talend.components.azurestorage.table.tazurestorageoutputtable.TAzureStorageOutputTableProperties.ActionOnTable;
 import org.talend.components.azurestorage.utils.AzureStorageUtils;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
 
 public class AzureStorageTableService {
 
@@ -58,7 +53,7 @@ public class AzureStorageTableService {
             throws InvalidKeyException, URISyntaxException, StorageException {
 
         CloudTable cloudTable = connection.getCloudStorageAccount().createCloudTableClient().getTableReference(tableName);
-        return cloudTable.execute(partitionQuery);
+        return cloudTable.execute(partitionQuery, null, AzureStorageUtils.getTalendOperationContext());
     }
 
     public void handleActionOnTable(String tableName, ActionOnTable actionTable)
@@ -69,17 +64,17 @@ public class AzureStorageTableService {
         CloudTable cloudTable = connection.getCloudStorageAccount().createCloudTableClient().getTableReference(tableName);
         switch (actionTable) {
         case Create_table:
-            cloudTable.create();
+            cloudTable.create(null, AzureStorageUtils.getTalendOperationContext());
             break;
         case Create_table_if_does_not_exist:
-            cloudTable.createIfNotExists();
+            cloudTable.createIfNotExists(null, AzureStorageUtils.getTalendOperationContext());
             break;
         case Drop_and_create_table:
-            cloudTable.delete();
+            cloudTable.delete(null, AzureStorageUtils.getTalendOperationContext());
             createTableAfterDeletion(cloudTable);
             break;
         case Drop_table_if_exist_and_create:
-            cloudTable.deleteIfExists();
+            cloudTable.deleteIfExists(null, AzureStorageUtils.getTalendOperationContext());
             createTableAfterDeletion(cloudTable);
             break;
         case Default:

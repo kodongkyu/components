@@ -46,7 +46,9 @@ public class AzureStorageUtils {
     public static OperationContext getTalendOperationContext() {
         if (talendOperationContext == null) {
             talendOperationContext = new OperationContext();
-            talendOperationContext.getUserHeaders().put(USER_AGENT_KEY, USER_AGENT_VALUE);
+            HashMap<String, String> talendUserHeaders = new HashMap<>();
+            talendUserHeaders.put(USER_AGENT_KEY, USER_AGENT_VALUE);
+            talendOperationContext.setUserHeaders(talendUserHeaders);
         }
 
         return talendOperationContext;
